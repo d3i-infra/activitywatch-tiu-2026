@@ -1,0 +1,202 @@
+{
+  "platform_info": {
+    "name": "ActivityWatch",
+    "filetypes": [
+      "json"
+    ],
+    "languages": [
+      "en"
+    ],
+    "description": "Handles ActivityWatch JSON exports from Windows, macOS, and Android devices. Participants upload their exported JSON file directly.",
+    "time_last_tested": "24-09-2026"
+  },
+  "tables": [
+    {
+      "id": "aw_bucket_info",
+      "title": {
+        "en": "Bucket information",
+        "nl": "Bucket-informatie"
+      },
+      "description": {
+        "en": "Overview of all ActivityWatch buckets found in your data, showing what type of data was collected and on which device.",
+        "nl": "Overzicht van alle ActivityWatch-buckets in uw gegevens, met het type verzamelde data en het apparaat."
+      },
+      "headers": {
+        "Bucket ID": {
+          "en": "Bucket ID",
+          "nl": "Bucket-ID"
+        },
+        "Type": {
+          "en": "Type",
+          "nl": "Type"
+        },
+        "Client": {
+          "en": "Client",
+          "nl": "Client"
+        },
+        "Hostname": {
+          "en": "Hostname",
+          "nl": "Hostnaam"
+        },
+        "Created": {
+          "en": "Created",
+          "nl": "Aangemaakt"
+        }
+      },
+      "extractor": "bucket_info_to_df",
+      "documentation": {
+        "summary": "Each row describes one ActivityWatch bucket found in the donated file, including its type, the client that created it, the hostname of the device, and the creation timestamp.",
+        "source_file": "the uploaded JSON file",
+        "columns": {
+          "Bucket ID": "Unique identifier of the bucket (e.g. aw-watcher-window_MSI).",
+          "Type": "Bucket type such as afkstatus, currentwindow, or os.lockscreen.unlocks.",
+          "Client": "Name of the ActivityWatch watcher client that produced the bucket.",
+          "Hostname": "Hostname of the device the bucket was recorded on.",
+          "Created": "ISO 8601 timestamp of when the bucket was created."
+        }
+      }
+    },
+    {
+      "id": "aw_afk_events",
+      "title": {
+        "en": "AFK events",
+        "nl": "AFK-gebeurtenissen"
+      },
+      "description": {
+        "en": "Periods when you were away from (or returned to) your keyboard, as recorded by ActivityWatch.",
+        "nl": "Perioden waarin u weg was van (of terugkeerde naar) uw toetsenbord, zoals geregistreerd door ActivityWatch."
+      },
+      "headers": {
+        "Timestamp": {
+          "en": "Timestamp",
+          "nl": "Tijdstip"
+        },
+        "Duration (s)": {
+          "en": "Duration (s)",
+          "nl": "Duur (s)"
+        },
+        "Status": {
+          "en": "Status",
+          "nl": "Status"
+        },
+        "Bucket ID": {
+          "en": "Bucket ID",
+          "nl": "Bucket-ID"
+        },
+        "Hostname": {
+          "en": "Hostname",
+          "nl": "Hostnaam"
+        }
+      },
+      "visualizations": [],
+      "extractor": "afk_events_to_df",
+      "documentation": {
+        "summary": "Each row represents one AFK (away-from-keyboard) event, recording when the participant was idle or active at their device.",
+        "source_file": "the uploaded JSON file — buckets with type containing 'afk'",
+        "columns": {
+          "Timestamp": "ISO 8601 timestamp of the start of the AFK event.",
+          "Duration (s)": "Duration of the event in seconds.",
+          "Status": "AFK status: 'afk' (idle) or 'not-afk' (active).",
+          "Bucket ID": "Identifier of the bucket this event came from.",
+          "Hostname": "Hostname of the device."
+        }
+      }
+    },
+    {
+      "id": "aw_window_events",
+      "title": {
+        "en": "Window / app usage events",
+        "nl": "Venster- / app-gebruiksgebeurtenissen"
+      },
+      "description": {
+        "en": "Active application and window events as recorded by ActivityWatch. Window titles are hashed for privacy.",
+        "nl": "Actieve applicatie- en venstergebeurtenissen zoals geregistreerd door ActivityWatch. Venstertitels zijn gehasht voor privacy."
+      },
+      "headers": {
+        "Timestamp": {
+          "en": "Timestamp",
+          "nl": "Tijdstip"
+        },
+        "Duration (s)": {
+          "en": "Duration (s)",
+          "nl": "Duur (s)"
+        },
+        "App": {
+          "en": "Application",
+          "nl": "Applicatie"
+        },
+        "Title Hash": {
+          "en": "Title hash",
+          "nl": "Titelhash"
+        },
+        "Bucket ID": {
+          "en": "Bucket ID",
+          "nl": "Bucket-ID"
+        },
+        "Hostname": {
+          "en": "Hostname",
+          "nl": "Hostnaam"
+        }
+      },
+      "visualizations": [
+        {
+          "title": {
+            "en": "Most used applications",
+            "nl": "Meest gebruikte applicaties"
+          },
+          "type": "wordcloud",
+          "textColumn": "App",
+          "tokenize": false
+        }
+      ],
+      "extractor": "window_events_to_df",
+      "documentation": {
+        "summary": "Each row represents one window-focus or app-usage event. Window titles are hashed for privacy. Additional data fields (url, package, classname) are included when present.",
+        "source_file": "the uploaded JSON file — buckets with type containing 'currentwindow'",
+        "columns": {
+          "Timestamp": "ISO 8601 timestamp of the start of the event.",
+          "Duration (s)": "Duration of the event in seconds.",
+          "App": "Name of the active application.",
+          "Title Hash": "Salted SHA-256 hash (16 hex chars) of the window title.",
+          "Bucket ID": "Identifier of the bucket this event came from.",
+          "Hostname": "Hostname of the device."
+        }
+      }
+    },
+    {
+      "id": "aw_unlock_events",
+      "title": {
+        "en": "Screen unlock events",
+        "nl": "Scherm-ontgrendelingsgebeurtenissen"
+      },
+      "description": {
+        "en": "Timestamps of screen unlocks, typically from Android devices running ActivityWatch.",
+        "nl": "Tijdstippen van schermontgrendelingen, meestal van Android-apparaten met ActivityWatch."
+      },
+      "headers": {
+        "Timestamp": {
+          "en": "Timestamp",
+          "nl": "Tijdstip"
+        },
+        "Bucket ID": {
+          "en": "Bucket ID",
+          "nl": "Bucket-ID"
+        },
+        "Hostname": {
+          "en": "Hostname",
+          "nl": "Hostnaam"
+        }
+      },
+      "extractor": "unlock_events_to_df",
+      "documentation": {
+        "summary": "Each row represents one screen-unlock event, typically from an Android device.",
+        "source_file": "the uploaded JSON file — buckets with type containing 'unlock'",
+        "columns": {
+          "Timestamp": "ISO 8601 timestamp of the unlock event.",
+          "Bucket ID": "Identifier of the bucket this event came from.",
+          "Hostname": "Hostname of the device."
+        }
+      }
+    }
+  ]
+}

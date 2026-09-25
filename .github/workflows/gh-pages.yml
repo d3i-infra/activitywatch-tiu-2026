@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - development
 
 permissions:
   contents: write
@@ -56,6 +57,7 @@ jobs:
         run: pnpm run build
         env:
           NODE_ENV: development
+          VITE_PLATFORM: activitywatch
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

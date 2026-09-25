@@ -92,9 +92,10 @@ pytests/scenarios/*PRIVATE.json
 
 .~lock.*#
 
-# Config files (keep example configs)
+# Config files (keep example and activitywatch configs)
 *_config.json
 !*example_config.json
+!*activitywatch_config.json
 
 # Claude Code: track shared settings.json only — local overrides and agent
 # worktrees stay personal
