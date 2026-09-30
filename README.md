@@ -1,7 +1,10 @@
-# The data donation task
+# ActivityWatch Data Donation — TiU 2026
 
-The data donation task (a fork of [Feldspar](https://github.com/eyra/feldspar)) is a front end that guides participants through the data donation steps, used in conjunction with Next.
-Next is a software as a service platform developed by [Eyra](https://eyra.co/) to facilitate scientific research.
+This project collects local screen-time data from [ActivityWatch](https://activitywatch.net/) as part of a data donation study at Tilburg University. Participants export their ActivityWatch buckets, upload them through a guided donation flow, and consent to sharing the extracted data with researchers.
+
+Built on top of the [data-donation-task](https://github.com/d3i-infra/data-donation-task) (a fork of [Feldspar](https://github.com/eyra/feldspar)), which provides the front end that guides participants through the data donation steps, used in conjunction with Next — a software as a service platform developed by [Eyra](https://eyra.co/) to facilitate scientific research.
+
+**Demo:** <https://d3i-infra.github.io/activitywatch-tiu-2026/>
 
 For detailed tutorials and API reference, see the [documentation site](https://d3i-infra.github.io/data-donation-task/).
 
