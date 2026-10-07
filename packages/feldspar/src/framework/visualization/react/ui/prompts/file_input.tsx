@@ -126,11 +126,11 @@ const note = (): Translatable => {
 
 const placeholder = (): Translatable => {
   return new TextBundle()
-    .add('en', 'E.g. data.zip')
-    .add('de', 'Z.B. data.zip')
-    .add('it', 'Esempio: data.zip')
-    .add('es', 'Ejemplo: data.zip')
-    .add('nl', 'Voorbeeld: data.zip')
-    .add('ro', 'Ex. data.zip')
-    .add('lt', 'Pvz. data.zip')
+    .add('en', 'E.g. aw-buckets-export.json')
+    .add('de', 'Z.B. aw-buckets-export.json')
+    .add('it', 'Esempio: aw-buckets-export.json')
+    .add('es', 'Ejemplo: aw-buckets-export.json')
+    .add('nl', 'Voorbeeld: aw-buckets-export.json')
+    .add('ro', 'Ex. aw-buckets-export.json')
+    .add('lt', 'Pvz. aw-buckets-export.json')
 }

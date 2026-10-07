@@ -18,9 +18,7 @@ The platform discovers all buckets inside the JSON and groups them by
 * **os.lockscreen.unlocks** — screen unlock timestamps (Android).
 
 Multiple devices may be present in a single export; events from matching
-buckets are concatenated into a single table while preserving the
-originating bucket id and hostname so each device remains
-distinguishable.
+buckets are concatenated into a single table.
 
 Window titles are hashed with a per-donation random salt to protect
 participant privacy while still enabling frequency analysis.
@@ -141,92 +139,11 @@ def _validate_json(archive: SeekableBinaryReader) -> ValidateInput:
 # (the ``reader`` slot in run_extraction) and an ``errors`` counter.
 # ---------------------------------------------------------------------------
 
-_KNOWN_BUCKET_PATTERNS = [r"afk", r"currentwindow", r"unlock"]
-
-
-def bucket_info_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.DataFrame:
-    """Extract metadata for buckets that this platform can process.
-
-    Only buckets whose type matches one of the known patterns
-    (``afk``, ``currentwindow``, ``unlock``) are included.
-
-    Parameters
-    ----------
-    buckets:
-        Parsed list of bucket dicts from the uploaded JSON.
-    errors:
-        Mutable counter that accumulates error type counts.
-
-    Returns
-    -------
-    pd.DataFrame
-        Columns: ``Bucket ID``, ``Type``, ``Client``, ``Hostname``,
-        ``Created``.
-
-    Table documentation::
-
-        {
-          "summary": "Each row describes one ActivityWatch bucket found in the donated file, including its type, the client that created it, the hostname of the device, and the creation timestamp.",
-          "source_file": "the uploaded JSON file",
-          "columns": {
-            "Bucket ID": "Unique identifier of the bucket (e.g. aw-watcher-window_MSI).",
-            "Type": "Bucket type such as afkstatus, currentwindow, or os.lockscreen.unlocks.",
-            "Client": "Name of the ActivityWatch watcher client that produced the bucket.",
-            "Hostname": "Hostname of the device the bucket was recorded on.",
-            "Created": "ISO 8601 timestamp of when the bucket was created."
-          }
-        }
-
-    Table config::
-
-        {
-          "id": "aw_bucket_info",
-          "title": {
-            "en": "Bucket information",
-            "nl": "Bucket-informatie"
-          },
-          "description": {
-            "en": "Overview of all ActivityWatch buckets found in your data, showing what type of data was collected and on which device.",
-            "nl": "Overzicht van alle ActivityWatch-buckets in uw gegevens, met het type verzamelde data en het apparaat."
-          },
-          "headers": {
-            "Bucket ID":   {"en": "Bucket ID",   "nl": "Bucket-ID"},
-            "Type":        {"en": "Type",         "nl": "Type"},
-            "Client":      {"en": "Client",       "nl": "Client"},
-            "Hostname":    {"en": "Hostname",     "nl": "Hostnaam"},
-            "Created":     {"en": "Created",      "nl": "Aangemaakt"}
-          }
-        }
-    """
-    out = pd.DataFrame()
-    try:
-        if not buckets:
-            return out
-        relevant_buckets: list[dict[str, Any]] = []
-        for pattern in _KNOWN_BUCKET_PATTERNS:
-            relevant_buckets.extend(_buckets_by_type(buckets, pattern))
-        rows = []
-        for b in relevant_buckets:
-            rows.append({
-                "Bucket ID": b.get("_bucket_id", ""),
-                "Type": b.get("type", ""),
-                "Client": b.get("client", ""),
-                "Hostname": b.get("hostname", ""),
-                "Created": b.get("created", ""),
-            })
-        out = pd.DataFrame(rows)
-    except Exception as e:
-        logger.error("bucket_info_to_df error: %s", e)
-        errors[type(e).__name__] += 1
-    return out
-
-
 def afk_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.DataFrame:
     """Extract AFK (away-from-keyboard) events from all ``afkstatus`` buckets.
 
     Events from multiple buckets (i.e. multiple devices) are
-    concatenated.  The ``Bucket ID`` and ``Hostname`` columns allow
-    downstream analysis to distinguish devices.
+    concatenated.
 
     Parameters
     ----------
@@ -238,8 +155,7 @@ def afk_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.DataF
     Returns
     -------
     pd.DataFrame
-        Columns: ``Timestamp``, ``Duration (s)``, ``Status``,
-        ``Bucket ID``, ``Hostname``.
+        Columns: ``Timestamp``, ``Duration (s)``, ``Status``.
 
     Table documentation::
 
@@ -249,9 +165,7 @@ def afk_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.DataF
           "columns": {
             "Timestamp": "ISO 8601 timestamp of the start of the AFK event.",
             "Duration (s)": "Duration of the event in seconds.",
-            "Status": "AFK status: 'afk' (idle) or 'not-afk' (active).",
-            "Bucket ID": "Identifier of the bucket this event came from.",
-            "Hostname": "Hostname of the device."
+            "Status": "AFK status: 'afk' (idle) or 'not-afk' (active)."
           }
         }
 
@@ -270,9 +184,7 @@ def afk_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.DataF
           "headers": {
             "Timestamp":    {"en": "Timestamp",       "nl": "Tijdstip"},
             "Duration (s)": {"en": "Duration (s)",    "nl": "Duur (s)"},
-            "Status":       {"en": "Status",          "nl": "Status"},
-            "Bucket ID":    {"en": "Bucket ID",       "nl": "Bucket-ID"},
-            "Hostname":     {"en": "Hostname",        "nl": "Hostnaam"}
+            "Status":       {"en": "Status",          "nl": "Status"}
           },
           "visualizations": []
         }
@@ -284,16 +196,12 @@ def afk_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.DataF
             return out
         rows = []
         for b in afk_buckets:
-            bucket_id = b.get("_bucket_id", "")
-            hostname = b.get("hostname", "")
             for event in b.get("events", []):
                 data = event.get("data", {})
                 rows.append({
                     "Timestamp": event.get("timestamp", ""),
                     "Duration (s)": event.get("duration", 0),
                     "Status": data.get("status", ""),
-                    "Bucket ID": bucket_id,
-                    "Hostname": hostname,
                 })
         out = pd.DataFrame(rows)
         if not out.empty:
@@ -328,8 +236,7 @@ def window_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
     -------
     pd.DataFrame
         Columns: ``Timestamp``, ``Duration (s)``, ``App``,
-        ``Title Hash``, ``Bucket ID``, ``Hostname``,
-        and any additional data-field columns.
+        ``Title Hash``, and any additional data-field columns.
 
     Table documentation::
 
@@ -340,9 +247,7 @@ def window_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
             "Timestamp": "ISO 8601 timestamp of the start of the event.",
             "Duration (s)": "Duration of the event in seconds.",
             "App": "Name of the active application.",
-            "Title Hash": "Salted SHA-256 hash (16 hex chars) of the window title.",
-            "Bucket ID": "Identifier of the bucket this event came from.",
-            "Hostname": "Hostname of the device."
+            "Title Hash": "Salted SHA-256 hash (16 hex chars) of the window title."
           }
         }
 
@@ -355,22 +260,21 @@ def window_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
             "nl": "Venster- / app-gebruiksgebeurtenissen"
           },
           "description": {
-            "en": "Active application and window events as recorded by ActivityWatch. Window titles are hashed for privacy.",
-            "nl": "Actieve applicatie- en venstergebeurtenissen zoals geregistreerd door ActivityWatch. Venstertitels zijn gehasht voor privacy."
+            "en": "Active application and window events as recorded by ActivityWatch. Window titles are hashed for privacy. To remove a specific application from your donation: search for it in the table, click the top result, then click the delete button.",
+            "nl": "Actieve applicatie- en venstergebeurtenissen zoals geregistreerd door ActivityWatch. Venstertitels zijn gehasht voor privacy. Om een specifieke applicatie uit uw donatie te verwijderen: zoek ernaar in de tabel, klik op het bovenste resultaat en klik op de verwijderknop."
           },
           "headers": {
             "Timestamp":    {"en": "Timestamp",    "nl": "Tijdstip"},
             "Duration (s)": {"en": "Duration (s)", "nl": "Duur (s)"},
             "App":          {"en": "Application",  "nl": "Applicatie"},
-            "Title Hash":   {"en": "Title hash",   "nl": "Titelhash"},
-            "Bucket ID":    {"en": "Bucket ID",    "nl": "Bucket-ID"},
-            "Hostname":     {"en": "Hostname",     "nl": "Hostnaam"}
+            "Title Hash":   {"en": "Title hash",   "nl": "Titelhash"}
           },
           "visualizations": [
             {
               "title": {"en": "Most used applications", "nl": "Meest gebruikte applicaties"},
               "type": "wordcloud",
               "textColumn": "App",
+              "valueColumn": "Duration (s)",
               "tokenize": false
             }
           ]
@@ -385,8 +289,6 @@ def window_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
         salt = secrets.token_hex(16)
         rows = []
         for b in window_buckets:
-            bucket_id = b.get("_bucket_id", "")
-            hostname = b.get("hostname", "")
             for event in b.get("events", []):
                 data = event.get("data", {})
                 if not isinstance(data, dict):
@@ -397,8 +299,6 @@ def window_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
                     "Duration (s)": event.get("duration", 0),
                     "App": data.get("app", ""),
                     "Title Hash": _hash_value(title, salt) if title else "",
-                    "Bucket ID": bucket_id,
-                    "Hostname": hostname,
                 }
                 # Expand any additional data keys beyond app/title
                 for key, value in data.items():
@@ -435,7 +335,7 @@ def unlock_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
     Returns
     -------
     pd.DataFrame
-        Columns: ``Timestamp``, ``Bucket ID``, ``Hostname``.
+        Columns: ``Timestamp``.
 
     Table documentation::
 
@@ -443,9 +343,7 @@ def unlock_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
           "summary": "Each row represents one screen-unlock event, typically from an Android device.",
           "source_file": "the uploaded JSON file — buckets with type containing 'unlock'",
           "columns": {
-            "Timestamp": "ISO 8601 timestamp of the unlock event.",
-            "Bucket ID": "Identifier of the bucket this event came from.",
-            "Hostname": "Hostname of the device."
+            "Timestamp": "ISO 8601 timestamp of the unlock event."
           }
         }
 
@@ -462,9 +360,7 @@ def unlock_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
             "nl": "Tijdstippen van schermontgrendelingen, meestal van Android-apparaten met ActivityWatch."
           },
           "headers": {
-            "Timestamp": {"en": "Timestamp", "nl": "Tijdstip"},
-            "Bucket ID": {"en": "Bucket ID", "nl": "Bucket-ID"},
-            "Hostname":  {"en": "Hostname",  "nl": "Hostnaam"}
+            "Timestamp": {"en": "Timestamp", "nl": "Tijdstip"}
           }
         }
     """
@@ -475,13 +371,9 @@ def unlock_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
             return out
         rows = []
         for b in unlock_buckets:
-            bucket_id = b.get("_bucket_id", "")
-            hostname = b.get("hostname", "")
             for event in b.get("events", []):
                 rows.append({
                     "Timestamp": event.get("timestamp", ""),
-                    "Bucket ID": bucket_id,
-                    "Hostname": hostname,
                 })
         out = pd.DataFrame(rows)
         if not out.empty:
@@ -497,7 +389,6 @@ def unlock_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
 # ---------------------------------------------------------------------------
 
 EXTRACTOR_REGISTRY: dict[str, Callable[..., pd.DataFrame]] = {
-    "bucket_info_to_df": bucket_info_to_df,
     "afk_events_to_df": afk_events_to_df,
     "window_events_to_df": window_events_to_df,
     "unlock_events_to_df": unlock_events_to_df,

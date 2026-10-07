@@ -12,51 +12,6 @@
   },
   "tables": [
     {
-      "id": "aw_bucket_info",
-      "title": {
-        "en": "Bucket information",
-        "nl": "Bucket-informatie"
-      },
-      "description": {
-        "en": "Overview of all ActivityWatch buckets found in your data, showing what type of data was collected and on which device.",
-        "nl": "Overzicht van alle ActivityWatch-buckets in uw gegevens, met het type verzamelde data en het apparaat."
-      },
-      "headers": {
-        "Bucket ID": {
-          "en": "Bucket ID",
-          "nl": "Bucket-ID"
-        },
-        "Type": {
-          "en": "Type",
-          "nl": "Type"
-        },
-        "Client": {
-          "en": "Client",
-          "nl": "Client"
-        },
-        "Hostname": {
-          "en": "Hostname",
-          "nl": "Hostnaam"
-        },
-        "Created": {
-          "en": "Created",
-          "nl": "Aangemaakt"
-        }
-      },
-      "extractor": "bucket_info_to_df",
-      "documentation": {
-        "summary": "Each row describes one ActivityWatch bucket found in the donated file, including its type, the client that created it, the hostname of the device, and the creation timestamp.",
-        "source_file": "the uploaded JSON file",
-        "columns": {
-          "Bucket ID": "Unique identifier of the bucket (e.g. aw-watcher-window_MSI).",
-          "Type": "Bucket type such as afkstatus, currentwindow, or os.lockscreen.unlocks.",
-          "Client": "Name of the ActivityWatch watcher client that produced the bucket.",
-          "Hostname": "Hostname of the device the bucket was recorded on.",
-          "Created": "ISO 8601 timestamp of when the bucket was created."
-        }
-      }
-    },
-    {
       "id": "aw_afk_events",
       "title": {
         "en": "AFK events",
@@ -78,14 +33,6 @@
         "Status": {
           "en": "Status",
           "nl": "Status"
-        },
-        "Bucket ID": {
-          "en": "Bucket ID",
-          "nl": "Bucket-ID"
-        },
-        "Hostname": {
-          "en": "Hostname",
-          "nl": "Hostnaam"
         }
       },
       "visualizations": [],
@@ -96,9 +43,7 @@
         "columns": {
           "Timestamp": "ISO 8601 timestamp of the start of the AFK event.",
           "Duration (s)": "Duration of the event in seconds.",
-          "Status": "AFK status: 'afk' (idle) or 'not-afk' (active).",
-          "Bucket ID": "Identifier of the bucket this event came from.",
-          "Hostname": "Hostname of the device."
+          "Status": "AFK status: 'afk' (idle) or 'not-afk' (active)."
         }
       }
     },
@@ -109,8 +54,8 @@
         "nl": "Venster- / app-gebruiksgebeurtenissen"
       },
       "description": {
-        "en": "Active application and window events as recorded by ActivityWatch. Window titles are hashed for privacy.",
-        "nl": "Actieve applicatie- en venstergebeurtenissen zoals geregistreerd door ActivityWatch. Venstertitels zijn gehasht voor privacy."
+        "en": "Active application and window events as recorded by ActivityWatch. Window titles are hashed for privacy. To remove a specific application from your donation: search for it in the table, click the top result, then click the delete button.",
+        "nl": "Actieve applicatie- en venstergebeurtenissen zoals geregistreerd door ActivityWatch. Venstertitels zijn gehasht voor privacy. Om een specifieke applicatie uit uw donatie te verwijderen: zoek ernaar in de tabel, klik op het bovenste resultaat en klik op de verwijderknop."
       },
       "headers": {
         "Timestamp": {
@@ -128,14 +73,6 @@
         "Title Hash": {
           "en": "Title hash",
           "nl": "Titelhash"
-        },
-        "Bucket ID": {
-          "en": "Bucket ID",
-          "nl": "Bucket-ID"
-        },
-        "Hostname": {
-          "en": "Hostname",
-          "nl": "Hostnaam"
         }
       },
       "visualizations": [
@@ -146,6 +83,7 @@
           },
           "type": "wordcloud",
           "textColumn": "App",
+          "valueColumn": "Duration (s)",
           "tokenize": false
         }
       ],
@@ -157,9 +95,7 @@
           "Timestamp": "ISO 8601 timestamp of the start of the event.",
           "Duration (s)": "Duration of the event in seconds.",
           "App": "Name of the active application.",
-          "Title Hash": "Salted SHA-256 hash (16 hex chars) of the window title.",
-          "Bucket ID": "Identifier of the bucket this event came from.",
-          "Hostname": "Hostname of the device."
+          "Title Hash": "Salted SHA-256 hash (16 hex chars) of the window title."
         }
       }
     },
@@ -177,14 +113,6 @@
         "Timestamp": {
           "en": "Timestamp",
           "nl": "Tijdstip"
-        },
-        "Bucket ID": {
-          "en": "Bucket ID",
-          "nl": "Bucket-ID"
-        },
-        "Hostname": {
-          "en": "Hostname",
-          "nl": "Hostnaam"
         }
       },
       "extractor": "unlock_events_to_df",
@@ -192,9 +120,7 @@
         "summary": "Each row represents one screen-unlock event, typically from an Android device.",
         "source_file": "the uploaded JSON file — buckets with type containing 'unlock'",
         "columns": {
-          "Timestamp": "ISO 8601 timestamp of the unlock event.",
-          "Bucket ID": "Identifier of the bucket this event came from.",
-          "Hostname": "Hostname of the device."
+          "Timestamp": "ISO 8601 timestamp of the unlock event."
         }
       }
     }
