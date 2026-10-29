@@ -302,7 +302,7 @@ def window_events_to_df(buckets: list[dict[str, Any]], errors: Counter) -> pd.Da
                 }
                 # Expand any additional data keys beyond app/title
                 for key, value in data.items():
-                    if key in ("app", "title"):
+                    if key in ("app", "title", "url"):
                         continue
                     col_name = key.replace("_", " ").title()
                     row[col_name] = value
